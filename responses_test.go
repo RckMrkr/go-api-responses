@@ -99,11 +99,11 @@ func TestNoBody(t *testing.T) {
 }
 
 // Unsure how to check JSON equivalence
-func TestMarshaling(t *testing.T) {
+func TestJsonMarshaling(t *testing.T) {
 	assert := assert.New(t)
 	tests := []struct {
 		Function http.HandlerFunc
-		Json     string
+		JSON     string
 	}{
 		{
 			func(w http.ResponseWriter, r *http.Request) {
@@ -142,7 +142,23 @@ func TestMarshaling(t *testing.T) {
 				return
 			}
 
-			assert.Equal(test.Json, body)
+			assert.Equal(test.JSON, body)
 		}()
 	}
+}
+
+func TestHeaderForUnauthorized(t *testing.T) {
+	assert := assert.New(t)
+
+	ts := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		RespondUnauthorizedBearerJWT(w)
+	})
+	defer ts.Close()
+
+	res, err := http.Get(ts.URL)
+	if !assert.Nil(err) {
+		return
+	}
+
+	assert.Equal(`Bearer token_type="JWT"`, res.Header.Get("WWW-Authenticate"))
 }
